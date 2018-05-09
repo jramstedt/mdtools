@@ -141,7 +141,7 @@ static int write_tile_1bpp(const Bitmap *in, FILE *out, int bx, int by)
 // return: error code
 //***************************************************************************
 
-static int write_tile_4bpp(const Bitmap *in, FILE *out, int bx, int by)
+static int write_tile_4bpp(const Bitmap * const in, FILE *out, int bx, int by)
 {
    // To store the tile data
    uint8_t data[32];

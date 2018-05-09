@@ -63,25 +63,20 @@ void set_sprite_origin(int x, int y)
 // param y: base Y coordinate (topmost tile)
 // param width: width in tiles
 // param height: height in tiles
+// param useVdp: use vdp sprite format
 // return: error code
 //***************************************************************************
 
-int generate_sprite(const Bitmap *in, FILE *outgfx, FILE *outmap,
-int x, int y, int width, int height)
+const int generate_sprite(const Bitmap * const in, const FILE * outgfx, const FILE * outmap,
+	const int x, const int y, const unsigned int width, const unsigned int height, const int useVdp)
 {
    // Um...
    if (width < 1 || width > 4 || height < 1 || height > 4)
       return ERR_PARSE;
 
    // Determine sprite coordinates
-   // Ugly hackish way because C doesn't guarantee anything about signed
-   // integers and compilers are known to be brutal about that...
    int temp_x = x - origin_x;
    int temp_y = y - origin_y;
-   if (temp_x < 0) temp_x = (temp_x + 0x10000) % 0xFFFF;
-   if (temp_y < 0) temp_y = (temp_y + 0x10000) % 0xFFFF;
-   uint16_t sprite_x = temp_x;
-   uint16_t sprite_y = temp_y;
 
    // Determine how many tiles the sprite takes up
    // For now we always insert new sprites (no deduplication attempted)
@@ -91,20 +86,51 @@ int x, int y, int width, int height)
    uint16_t tile_id = sprite_offset + get_map_offset();
    sprite_offset += num_tiles;
 
-   // Sprite size
-   uint8_t size = (width - 1) * 4 + (height - 1);
+   if (useVdp != 0) {
+	   int16_t sprite_x = ((temp_x & 0x80000000) >> 16) | (temp_x & 0x7FFF);
+	   int16_t sprite_y = ((temp_y & 0x80000000) >> 16) | (temp_y & 0x7FFF);
 
-   // Write sprite mapping entry
-   uint8_t buffer[8] = {
-      sprite_x >> 8, sprite_x,      // X offset
-      sprite_y >> 8, sprite_y,      // Y offset
-      tile_id >> 8, tile_id,        // tile ID + flags
-      0, size                       // sprite size
-   };
-   if (fwrite(buffer, 1, sizeof(buffer), outmap) != sizeof(buffer)) {
-      return ERR_CANTWRITESPR;
+	   int8_t priority = 0;
+	   int8_t palette = 0;
+	   int8_t vertical_flip = 0;
+	   int8_t horizontal_flip = 1;
+
+	   int16_t second = (width & 0b11) << 10 | (height & 0b11) << 8;
+	   int16_t third = (priority & 0b1) << 15 | (palette & 0b11) << 13 | (vertical_flip & 0b1) << 12 | (horizontal_flip & 0b1) << 11 | tile_id & 0x7FF;
+
+	   uint8_t buffer[] = {
+		   sprite_y >> 8, sprite_y,
+		   second >> 8, second,
+		   third >> 8, third,
+		   sprite_x >> 8, sprite_x
+	   };
+	   if (fwrite(buffer, sizeof(char), sizeof(buffer), outmap) != sizeof(buffer)) {
+		   return ERR_CANTWRITESPR;
+	   }
    }
+   else {
+	   // Ugly hackish way because C doesn't guarantee anything about signed
+	   // integers and compilers are known to be brutal about that...
+	   if (temp_x < 0) temp_x = (temp_x + 0x10000) % 0xFFFF;
+	   if (temp_y < 0) temp_y = (temp_y + 0x10000) % 0xFFFF;
+	   uint16_t sprite_x = temp_x;
+	   uint16_t sprite_y = temp_y;
 
+	   // Sprite size
+	   uint8_t size = (width - 1) * 4 + (height - 1);
+
+	   // Write sprite mapping entry
+	   uint8_t buffer[8] = {
+		   sprite_x >> 8, sprite_x,      // X offset
+		   sprite_y >> 8, sprite_y,      // Y offset
+		   tile_id >> 8, tile_id,        // tile ID + flags
+		   0, size                       // sprite size
+	   };
+	   if (fwrite(buffer, 1, sizeof(buffer), outmap) != sizeof(buffer)) {
+		   return ERR_CANTWRITESPR;
+	   }
+   }
+   
    // Write sprite tiles
    return write_sprite(in, outgfx, x, y, width, height);
 }
@@ -133,4 +159,26 @@ int generate_sprite_end(FILE *outmap)
 
    // No error :)
    return ERR_NONE;
+}
+
+//***************************************************************************
+// generate_sprite_count
+// Writes one byte containing sprite count in metasprite.
+//---------------------------------------------------------------------------
+// param outmap: output file where mappings are stored
+// param count: count of sprites in this metasprite
+// return: error code
+//***************************************************************************
+
+const int generate_sprite_count(const FILE *outmap, const uint8_t count) {
+	if (fwrite(&count, 1, sizeof(uint8_t), outmap) != sizeof(uint8_t)) {
+		return ERR_CANTWRITESPR;
+	}
+
+	// Reset mapping offset for next sprite
+	if (is_continuous_offset())
+		increment_offset(sprite_offset);
+	sprite_offset = 0;
+
+	return ERR_NONE;
 }
