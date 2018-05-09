@@ -93,7 +93,7 @@ const int generate_sprite(const Bitmap * const in, const FILE * outgfx, const FI
 	   int8_t priority = 0;
 	   int8_t palette = 0;
 	   int8_t vertical_flip = 0;
-	   int8_t horizontal_flip = 1;
+	   int8_t horizontal_flip = 0;
 
 	   int16_t second = (width & 0b11) << 10 | (height & 0b11) << 8;
 	   int16_t third = (priority & 0b1) << 15 | (palette & 0b11) << 13 | (vertical_flip & 0b1) << 12 | (horizontal_flip & 0b1) << 11 | tile_id & 0x7FF;
