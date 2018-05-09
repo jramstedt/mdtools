@@ -487,10 +487,17 @@ int build_batch(const char *infilename) {
                goto panic;
             }
          }
+		 else if (num_args == 3 && strcmp(args.tokens[1], "count") == 0) { // Sprite count
+			 errcode = generate_sprite_count(out[1], string_to_integer(args.tokens[2]));
+			 if (errcode) {
+				 free_tokens(&args);
+				 goto panic;
+			 }
+		 }
 
          // Check number of arguments then
          // Should be identical to "tiles"
-         else if (num_args != 5) {
+         else if (num_args < 5 || num_args > 6) {
             // Determine error message
             const char *msg;
             switch (num_args) {
@@ -530,6 +537,8 @@ int build_batch(const char *infilename) {
 
          // Everything is seemingly OK, process command
          else {
+			int vdp = strcmp(args.tokens[5], "vdp") == 0;
+
             // Retrieve parameters
             // To-do: check that they're indeed integers, but for now it
             // isn't much of an issue because at worst atoi will return 0
@@ -540,7 +549,7 @@ int build_batch(const char *infilename) {
 
             // Generate sprite mapping
             errcode = generate_sprite(in, out[0], out[1],
-               x, y, width, height);
+               x, y, width, height, vdp);
             if (errcode) {
                free_tokens(&args);
                goto panic;

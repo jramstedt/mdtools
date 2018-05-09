@@ -30,7 +30,8 @@
 
 // Function prototypes
 void set_sprite_origin(int, int);
-int generate_sprite(const Bitmap *, FILE *, FILE *, int, int, int, int);
+const int generate_sprite(const Bitmap *const, const FILE *, const FILE *, const int, const int, const unsigned int, const unsigned int, const int);
 int generate_sprite_end(FILE *);
+const int generate_sprite_count(const FILE *, const uint8_t);
 
 #endif
