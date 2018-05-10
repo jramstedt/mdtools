@@ -84,7 +84,6 @@ const int generate_sprite(const Bitmap * const in, const FILE * outgfx, const FI
 
    // Determine tile ID
    uint16_t tile_id = sprite_offset + get_map_offset();
-   sprite_offset += num_tiles;
 
    if (useVdp != 0) {
 	   int16_t sprite_x = ((temp_x & 0x80000000) >> 16) | (temp_x & 0x7FFF);
@@ -95,14 +94,17 @@ const int generate_sprite(const Bitmap * const in, const FILE * outgfx, const FI
 	   int8_t vertical_flip = 0;
 	   int8_t horizontal_flip = 0;
 
-	   int16_t second = (width & 0b11) << 10 | (height & 0b11) << 8;
-	   int16_t third = (priority & 0b1) << 15 | (palette & 0b11) << 13 | (vertical_flip & 0b1) << 12 | (horizontal_flip & 0b1) << 11 | tile_id & 0x7FF;
+	   int16_t second = ((width - 1) & 0b11) << 10 | ((height - 1) & 0b11) << 8;
+	   int16_t third = (priority & 0b1) << 15 | (palette & 0b11) << 13 | (vertical_flip & 0b1) << 12 | (horizontal_flip & 0b1) << 11 | sprite_offset & 0x7FF;
+
+	   int16_t dplc = (tile_id & 0x7FF) << 4 | (num_tiles-1) & 0xF;
 
 	   uint8_t buffer[] = {
 		   sprite_y >> 8, sprite_y,
 		   second >> 8, second,
 		   third >> 8, third,
-		   sprite_x >> 8, sprite_x
+		   sprite_x >> 8, sprite_x,
+		   dplc >> 8, dplc
 	   };
 	   if (fwrite(buffer, sizeof(char), sizeof(buffer), outmap) != sizeof(buffer)) {
 		   return ERR_CANTWRITESPR;
@@ -131,6 +133,8 @@ const int generate_sprite(const Bitmap * const in, const FILE * outgfx, const FI
 	   }
    }
    
+   sprite_offset += num_tiles;
+
    // Write sprite tiles
    return write_sprite(in, outgfx, x, y, width, height);
 }
