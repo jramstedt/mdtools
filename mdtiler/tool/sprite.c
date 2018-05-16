@@ -175,7 +175,9 @@ int generate_sprite_end(FILE *outmap)
 //***************************************************************************
 
 const int generate_sprite_count(const FILE *outmap, const uint8_t count) {
-	if (fwrite(&count, 1, sizeof(uint8_t), outmap) != sizeof(uint8_t)) {
+
+	uint8_t buffer[2] = { 0x00, count };
+	if (fwrite(buffer, 1, sizeof(buffer), outmap) != sizeof(buffer)) {
 		return ERR_CANTWRITESPR;
 	}
 
