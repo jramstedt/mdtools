@@ -407,7 +407,7 @@ int build_batch(const char *infilename) {
       // Generate map?
       else if (!strcmp(command, "map")) {
          // Check number of arguments
-         if (num_args != 5) {
+         if (num_args < 5 || num_args > 6) {
             // Determine error message
             const char *msg;
             switch (num_args) {
@@ -447,6 +447,8 @@ int build_batch(const char *infilename) {
 
          // Everything is seemingly OK, process command
          else {
+			const int reuse = num_args == 6 ? strcmp(args.tokens[5], "reuse") == 0 : 0;
+
             // Retrieve parameters
             // To-do: check that they're indeed integers, but for now it
             // isn't much of an issue because at worst atoi will return 0
@@ -457,7 +459,7 @@ int build_batch(const char *infilename) {
 
             // Generate map
             errcode = generate_map(in, out[0], out[1], x, y, width, height,
-               layout == LAYOUT_SPRITE);
+               layout == LAYOUT_SPRITE, reuse);
 
             // Gah!
             if (errcode) {
@@ -535,7 +537,7 @@ int build_batch(const char *infilename) {
 
          // Everything is seemingly OK, process command
          else {
-			int vdp = strcmp(args.tokens[5], "vdp") == 0;
+			const int vdp = num_args == 6 ? strcmp(args.tokens[5], "vdp") == 0 : 0;
 
             // Retrieve parameters
             // To-do: check that they're indeed integers, but for now it
