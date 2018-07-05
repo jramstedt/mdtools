@@ -47,8 +47,8 @@
 // return: error code
 //***************************************************************************
 
-int generate_map(const Bitmap *in, FILE *outgfx, FILE *outmap,
-int x, int y, int width, int height, int order) {
+int generate_map(const Bitmap *in, const FILE *outgfx, const FILE *outmap,
+	const int x, const int y, const int width, const int height, const int order, const int reuse) {
    // Um...
    if (width <= 0 || height <= 0)
       return ERR_PARSE;
@@ -62,9 +62,13 @@ int x, int y, int width, int height, int order) {
    // Get current offset
    uint16_t offset = get_map_offset();
 
+   fprintf(stdout, "reuse \"%i\"\n", reuse);
+
    // To store each tile
-   Tile *tiles = NULL;
-   uint16_t num_tiles = 0;
+   static Tile *tiles = NULL;
+   static uint16_t num_tiles = 0;
+
+   fprintf(stdout, "num_tiles \"%i\"\n", num_tiles);
 
    // To store the tile we're just checking
    Tile curr_tile;
@@ -187,50 +191,52 @@ int x, int y, int width, int height, int order) {
       mappings[pos2 * limit1 + pos1] = this_id;
    }
 
-   // Write all the tiles
-   for (size_t i = 0; i < num_tiles; i++) {
-      for (unsigned row = 0; row < 8; row++) {
-         // 4bpp format?
-         if (get_output_format() == FORMAT_4BPP) {
-            // Split each row into bytes
-            // We need to do this due to endianess shenanigans :P
-            uint8_t buffer[4];
-            buffer[0] = tiles[i].normal[row] >> 24;
-            buffer[1] = tiles[i].normal[row] >> 16;
-            buffer[2] = tiles[i].normal[row] >> 8;
-            buffer[3] = tiles[i].normal[row];
+   if (reuse == 0) {
+	   // Write all the tiles
+	   for (size_t i = 0; i < num_tiles; i++) {
+		   for (unsigned row = 0; row < 8; row++) {
+			   // 4bpp format?
+			   if (get_output_format() == FORMAT_4BPP) {
+				   // Split each row into bytes
+				   // We need to do this due to endianess shenanigans :P
+				   uint8_t buffer[4];
+				   buffer[0] = tiles[i].normal[row] >> 24;
+				   buffer[1] = tiles[i].normal[row] >> 16;
+				   buffer[2] = tiles[i].normal[row] >> 8;
+				   buffer[3] = tiles[i].normal[row];
 
-            // Write row into file
-            if (fwrite(buffer, 1, 4, outgfx) < 4) {
-               free(tiles);
-               free(mappings);
-               return ERR_CANTWRITEGFX;
-            }
-         }
+				   // Write row into file
+				   if (fwrite(buffer, 1, 4, outgfx) < 4) {
+					   free(tiles);
+					   free(mappings);
+					   return ERR_CANTWRITEGFX;
+				   }
+			   }
 
-         // 1bpp format?
-         else {
-            // Each row is just one byte, but so far we've been storing the
-            // tiles as 4bpp to make our life easier, so we need to convert
-            // it to 1bpp first
-            uint8_t buffer =
-               (tiles[i].normal[row] & 0x10000000 ? 0x80 : 0x00) |
-               (tiles[i].normal[row] & 0x01000000 ? 0x40 : 0x00) |
-               (tiles[i].normal[row] & 0x00100000 ? 0x20 : 0x00) |
-               (tiles[i].normal[row] & 0x00010000 ? 0x10 : 0x00) |
-               (tiles[i].normal[row] & 0x00001000 ? 0x08 : 0x00) |
-               (tiles[i].normal[row] & 0x00000100 ? 0x04 : 0x00) |
-               (tiles[i].normal[row] & 0x00000010 ? 0x02 : 0x00) |
-               (tiles[i].normal[row] & 0x00000001 ? 0x01 : 0x00);
+			   // 1bpp format?
+			   else {
+				   // Each row is just one byte, but so far we've been storing the
+				   // tiles as 4bpp to make our life easier, so we need to convert
+				   // it to 1bpp first
+				   uint8_t buffer =
+					   (tiles[i].normal[row] & 0x10000000 ? 0x80 : 0x00) |
+					   (tiles[i].normal[row] & 0x01000000 ? 0x40 : 0x00) |
+					   (tiles[i].normal[row] & 0x00100000 ? 0x20 : 0x00) |
+					   (tiles[i].normal[row] & 0x00010000 ? 0x10 : 0x00) |
+					   (tiles[i].normal[row] & 0x00001000 ? 0x08 : 0x00) |
+					   (tiles[i].normal[row] & 0x00000100 ? 0x04 : 0x00) |
+					   (tiles[i].normal[row] & 0x00000010 ? 0x02 : 0x00) |
+					   (tiles[i].normal[row] & 0x00000001 ? 0x01 : 0x00);
 
-            // Write row into file
-            if (fwrite(&buffer, 1, 1, outgfx) < 1) {
-               free(tiles);
-               free(mappings);
-               return ERR_CANTWRITEGFX;
-            }
-         }
-      }
+				   // Write row into file
+				   if (fwrite(&buffer, 1, 1, outgfx) < 1) {
+					   free(tiles);
+					   free(mappings);
+					   return ERR_CANTWRITEGFX;
+				   }
+			   }
+		   }
+	   }
    }
 
    // Write the mappings
@@ -259,7 +265,11 @@ int x, int y, int width, int height, int order) {
       increment_offset(num_tiles);
 
    // Success!
-   free(tiles);
+   if (reuse == 0) {
+	   free(tiles);
+	   tiles = NULL;
+	   num_tiles = 0;
+   }
    free(mappings);
    return ERR_NONE;
 }
