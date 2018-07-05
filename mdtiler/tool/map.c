@@ -47,8 +47,8 @@
 // return: error code
 //***************************************************************************
 
-int generate_map(const Bitmap *in, const FILE *outgfx, const FILE *outmap,
-	const int x, const int y, const int width, const int height, const int order, const int reuse) {
+int generate_map(const Bitmap * const in, const FILE *outgfx, const FILE *outmap,
+	const unsigned int x, const unsigned int y, const unsigned int width, const unsigned int height, const int order, const int reuse) {
    // Um...
    if (width <= 0 || height <= 0)
       return ERR_PARSE;
@@ -62,13 +62,9 @@ int generate_map(const Bitmap *in, const FILE *outgfx, const FILE *outmap,
    // Get current offset
    uint16_t offset = get_map_offset();
 
-   fprintf(stdout, "reuse \"%i\"\n", reuse);
-
    // To store each tile
    static Tile *tiles = NULL;
    static uint16_t num_tiles = 0;
-
-   fprintf(stdout, "num_tiles \"%i\"\n", num_tiles);
 
    // To store the tile we're just checking
    Tile curr_tile;
