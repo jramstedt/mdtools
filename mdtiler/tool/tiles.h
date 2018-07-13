@@ -42,6 +42,7 @@ typedef struct {
    uint32_t normal[8];     // Row data (not flipped)
    uint32_t flipped[8];    // Row data (flipped horizontally)
    uint8_t flags;          // Palette and priority
+   uint8_t palettes;       // bitmask of palettes used
 } Tile;
 
 // Function prototypes
