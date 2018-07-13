@@ -48,6 +48,7 @@ static Format format = FORMAT_4BPP;
 void get_tile(const Bitmap *in, Tile *out, int bx, int by) {
    // To keep track of the flags (palette and priority)
    uint8_t flags = 0;
+   uint8_t palettes = 0;
 
    // Scan all rows
    for (int y = 0; y < 8; y++) {
@@ -58,7 +59,8 @@ void get_tile(const Bitmap *in, Tile *out, int bx, int by) {
       // Retrieve pixels of this row
       for (int x = 0; x < 8; x++) {
          uint8_t pixel = get_pixel(in, bx + x, by + y);
-         flags |= (pixel >> 4) & 0x0F;
+		 palettes |= 1 << ((pixel >> 4) & 0x03);
+         flags |= (pixel >> 4) & 0x07;
          pixel &= 0x0F;
          normal = normal << 4 | pixel;
          flipped = flipped >> 4 | pixel << 28;
@@ -69,6 +71,12 @@ void get_tile(const Bitmap *in, Tile *out, int bx, int by) {
       out->flipped[y] = flipped;
    }
 
+   uint8_t paletteCount = count_ones(palettes);
+   if(paletteCount > 1)
+	fprintf(stdout, "%i %i %i\n", count_ones(palettes), palettes);
+
+   out->palettes = palettes;
+   
    // Store flags
    out->flags = get_palette_mapping(flags);
 }
