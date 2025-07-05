@@ -168,13 +168,15 @@ int generate_map(const Bitmap * const in, const FILE *outgfx, const FILE *outmap
             return ERR_MANYTILES;
          }
 
-         // Allocate memory for new tile
-         tiles = (Tile *) realloc(tiles, sizeof(Tile) * num_tiles);
-         if (tiles == NULL) {
+         // Allocate memory for new 
+         void* new_tiles = realloc(tiles, sizeof(Tile) * num_tiles);
+         if (new_tiles == NULL) {
             free(tiles);
             free(mappings);
             return ERR_NOMEMORY;
          }
+
+         tiles = (Tile*)new_tiles;
 
          // Store tile in the list
          memcpy(&tiles[num_tiles - 1], &curr_tile, sizeof(Tile));
