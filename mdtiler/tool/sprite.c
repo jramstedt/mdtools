@@ -30,7 +30,7 @@
 #include "tiles.h"
 
 // Sprite tile ID offset within a mapping
-static size_t sprite_offset = 0;
+static uint16_t sprite_offset = 0;
 
 // Center point of the sprite mapping
 static int origin_x = 0;
@@ -67,7 +67,7 @@ void set_sprite_origin(int x, int y)
 // return: error code
 //***************************************************************************
 
-const int generate_sprite(const Bitmap * const in, const FILE * outgfx, const FILE * outmap,
+const int generate_sprite(const Bitmap * const in, FILE * outgfx, FILE * outmap,
 	const int x, const int y, const unsigned int width, const unsigned int height, const int useVdp)
 {
    // Um...
@@ -80,7 +80,7 @@ const int generate_sprite(const Bitmap * const in, const FILE * outgfx, const FI
 
    // Determine how many tiles the sprite takes up
    // For now we always insert new sprites (no deduplication attempted)
-   size_t num_tiles = width * height;
+   uint16_t num_tiles = width * height;
 
    // Determine tile ID
    uint16_t tile_id = sprite_offset + get_map_offset();
@@ -100,11 +100,11 @@ const int generate_sprite(const Bitmap * const in, const FILE * outgfx, const FI
 	   int16_t dplc = (tile_id & 0x7FF) << 4 | (num_tiles-1) & 0xF;
 
 	   uint8_t buffer[] = {
-		   sprite_y >> 8, sprite_y,
-		   second >> 8, second,
-		   third >> 8, third,
-		   sprite_x >> 8, sprite_x,
-		   dplc >> 8, dplc
+		   (uint8_t)(sprite_y >> 8), (uint8_t)sprite_y,
+		   (uint8_t)(second >> 8), (uint8_t)second,
+		   (uint8_t)(third >> 8), (uint8_t)third,
+		   (uint8_t)(sprite_x >> 8), (uint8_t)sprite_x,
+		   (uint8_t)(dplc >> 8), (uint8_t)dplc
 	   };
 	   if (fwrite(buffer, sizeof(char), sizeof(buffer), outmap) != sizeof(buffer)) {
 		   return ERR_CANTWRITESPR;
@@ -123,9 +123,9 @@ const int generate_sprite(const Bitmap * const in, const FILE * outgfx, const FI
 
 	   // Write sprite mapping entry
 	   uint8_t buffer[8] = {
-		   sprite_x >> 8, sprite_x,      // X offset
-		   sprite_y >> 8, sprite_y,      // Y offset
-		   tile_id >> 8, tile_id,        // tile ID + flags
+		   (uint8_t)(sprite_x >> 8), (uint8_t)sprite_x,      // X offset
+		   (uint8_t)(sprite_y >> 8), (uint8_t)sprite_y,      // Y offset
+		   (uint8_t)(tile_id >> 8), (uint8_t)tile_id,        // tile ID + flags
 		   0, size                       // sprite size
 	   };
 	   if (fwrite(buffer, 1, sizeof(buffer), outmap) != sizeof(buffer)) {
@@ -174,7 +174,7 @@ int generate_sprite_end(FILE *outmap)
 // return: error code
 //***************************************************************************
 
-const int generate_sprite_count(const FILE *outmap, const uint8_t count) {
+const int generate_sprite_count(FILE *outmap, const uint8_t count) {
 
 	uint8_t buffer[2] = { 0x00, count };
 	if (fwrite(buffer, 1, sizeof(buffer), outmap) != sizeof(buffer)) {

@@ -73,7 +73,7 @@ void get_tile(const Bitmap *in, Tile *out, int bx, int by) {
 
    uint8_t paletteCount = count_ones(palettes);
    if(paletteCount > 1)
-	fprintf(stdout, "%i %i %i\n", count_ones(palettes), palettes);
+	fprintf(stdout, "%i %i\n", count_ones(palettes), palettes);
 
    out->palettes = palettes;
    

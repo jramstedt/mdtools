@@ -47,7 +47,7 @@
 // return: error code
 //***************************************************************************
 
-int generate_map(const Bitmap * const in, const FILE *outgfx, const FILE *outmap,
+int generate_map(const Bitmap * const in, FILE *outgfx, FILE *outmap,
 	const unsigned int x, const unsigned int y, const unsigned int width, const unsigned int height, const int order, const int reuse) {
    // Um...
    if (width <= 0 || height <= 0)
@@ -246,8 +246,8 @@ int generate_map(const Bitmap * const in, const FILE *outgfx, const FILE *outmap
       // Split each word into two bytes
       // We need to do this due to endianess shenanigans :P
       uint8_t buffer[2] = {
-         tile >> 8,
-         tile
+         (uint8_t)(tile >> 8),
+         (uint8_t)tile
       };
 
       // Write word into file

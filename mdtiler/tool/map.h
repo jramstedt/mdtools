@@ -29,6 +29,6 @@
 #include "bitmap.h"
 
 // Function prototypes
-int generate_map(const Bitmap * const, const FILE *, const FILE *, const unsigned int, const unsigned int, const unsigned int, const unsigned int, const int, const int);
+int generate_map(const Bitmap * const, FILE *, FILE *, const unsigned int, const unsigned int, const unsigned int, const unsigned int, const int, const int);
 
 #endif

@@ -263,7 +263,7 @@ int build_batch(const char *infilename) {
                }
 
                // Parse value
-               palette[i] = strtoul(arg, NULL, 0x10);
+               palette[i] = (uint16_t)strtoul(arg, NULL, 0x10);
             }
 
             // Set new palette

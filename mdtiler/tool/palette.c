@@ -157,8 +157,8 @@ int dump_bitmap_palette(FILE *file) {
    uint8_t *ptr = blob;
    for (int i = 0; i < 16; i++) {
       uint16_t value = bitmap_pal[i];
-      *ptr++ = value >> 8;
-      *ptr++ = value;
+      *ptr++ = (uint8_t)(value >> 8);
+      *ptr++ = (uint8_t)value;
    }
 
    // Try to write it into the file
